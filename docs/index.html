@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MidiaSaver</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#6c5ce7" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, Roboto, Arial, sans-serif;
+      background: #0f0f14;
+      color: #f2f2f2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; background: linear-gradient(90deg,#e60023,#6c5ce7,#00cec9); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    p.sub { color: #999; font-size: 0.9rem; margin-top: 0; text-align: center; }
+    .plataformas { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; justify-content: center; }
+    .plataformas span { font-size: 0.75rem; background: #1c1c24; padding: 4px 10px; border-radius: 20px; color: #aaa; }
+    input, button {
+      width: 100%;
+      max-width: 420px;
+      padding: 13px 14px;
+      border-radius: 10px;
+      border: 1px solid #2a2a35;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+    input { background: #1a1a22; color: #fff; }
+    button {
+      background: linear-gradient(90deg,#e60023,#6c5ce7);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; }
+    #resultado { margin-top: 20px; max-width: 420px; width: 100%; text-align: center; }
+    #resultado img, #resultado video { max-width: 100%; border-radius: 10px; margin-bottom: 10px; }
+    #status { color: #999; margin-top: 12px; font-size: 0.9rem; min-height: 1.2em; }
+    a.download-btn {
+      display: inline-block;
+      margin-top: 8px;
+      background: #2ecc71;
+      color: #111;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    .aviso-caixa {
+      max-width: 420px;
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 28px;
+      text-align: center;
+      line-height: 1.4;
+      border-top: 1px solid #222;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MidiaSaver</h1>
+  <p class="sub">Cole o link de qualquer post e eu baixo pra você.</p>
+  <div class="plataformas">
+    <span>Instagram</span><span>TikTok</span><span>Twitter/X</span>
+    <span>YouTube</span><span>Facebook</span><span>Pinterest</span>
+  </div>
+
+  <input id="campoUrl" type="url" placeholder="Cole o link aqui..." />
+  <button id="btnBuscar">Baixar</button>
+
+  <div id="status"></div>
+  <div id="resultado"></div>
+
+  <p class="aviso-caixa">
+    Ferramenta de uso pessoal. Respeite os direitos autorais e os termos de uso
+    de cada plataforma — baixar não dá permissão pra redistribuir conteúdo de terceiros.
+    Pode acontecer da primeira busca demorar ~40s: o servidor gratuito "acorda" sob demanda.
+  </p>
+
+  <script>
+    // Troque pela URL do seu backend depois do deploy no Render.
+    const API_BASE = "https://SEU-BACKEND.onrender.com";
+
+    const campoUrl = document.getElementById("campoUrl");
+    const btnBuscar = document.getElementById("btnBuscar");
+    const status = document.getElementById("status");
+    const resultado = document.getElementById("resultado");
+
+    async function processar(url) {
+      resultado.innerHTML = "";
+      status.textContent = "Buscando (pode levar até 40s se o servidor estava dormindo)...";
+      btnBuscar.disabled = true;
+
+      try {
+        const resposta = await fetch(`${API_BASE}/api/extract?url=${encodeURIComponent(url)}`);
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+          throw new Error(dados.detail || "Erro desconhecido.");
+        }
+
+        status.textContent = dados.aviso ? `Encontrado — ${dados.aviso}` : "Encontrado!";
+
+        const tagMidia = dados.tipo === "video"
+          ? `<video controls src="${dados.url_midia}"></video>`
+          : `<img src="${dados.url_midia}" alt="${dados.titulo || 'mídia'}" />`;
+
+        resultado.innerHTML = `
+          ${tagMidia}
+          <br/><a class="download-btn" href="${dados.url_midia}" download target="_blank">
+            Salvar ${dados.tipo === "video" ? "vídeo" : "imagem"}
+          </a>
+        `;
+      } catch (erro) {
+        status.textContent = "Erro: " + erro.message;
+      } finally {
+        btnBuscar.disabled = false;
+      }
+    }
+
+    btnBuscar.addEventListener("click", () => {
+      const url = campoUrl.value.trim();
+      if (url) processar(url);
+    });
+
+    campoUrl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") btnBuscar.click();
+    });
+  </script>
+</body>
+</html>
