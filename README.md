@@ -4,6 +4,9 @@ Baixe vídeos e imagens das principais redes sociais de forma rápida e gratuita
 
 O MidiaSaver permite salvar conteúdos públicos de diversas plataformas diretamente pelo navegador, sem necessidade de instalar programas ou criar uma conta.
 
+Link da aplicação:
+https://codelibet.github.io/midiasaver/index.html
+
 ## Plataformas suportadas
 
 - Instagram
